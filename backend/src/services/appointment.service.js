@@ -152,12 +152,36 @@ class AppointmentService {
   }
 
   async getMyAppointments(userId, query = {}) {
-    const filter = { user: userId };
+    const { formatDate } = require('../utils/dateHelper');
+    const todayStr = formatDate(new Date());
+
+    let filter = { user: userId };
+
     if (query.status) {
-      if (query.status.includes(',')) {
-        filter.status = { $in: query.status.split(',') };
+      const statuses = query.status.split(',');
+      
+      if (query.status === 'confirmed,in_progress' || query.status === 'confirmed') {
+        // Upcoming: Must be >= today
+        filter.status = { $in: statuses };
+        filter.date = { $gte: todayStr };
+      } else if (query.status === 'completed') {
+        // Completed: explicitly completed OR (confirmed/in_progress but past date)
+        filter = {
+          $and: [
+            { user: userId },
+            {
+              $or: [
+                { status: 'completed' },
+                { 
+                  status: { $in: ['confirmed', 'in_progress'] },
+                  date: { $lt: todayStr }
+                }
+              ]
+            }
+          ]
+        };
       } else {
-        filter.status = query.status;
+        filter.status = statuses.length > 1 ? { $in: statuses } : query.status;
       }
     }
 

@@ -3,6 +3,7 @@
     "name": "DoctorCare",
     "slug": "doctorcare",
     "version": "1.0.0",
+    "owner": "mhd-jaseels-team",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./src/assets/branding/doctorcare-icon.jpg",
@@ -28,6 +29,11 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b242d4cf-c0fc-4cd3-88cf-1ef6ea7740c3"
+      }
+    }
   }
 }

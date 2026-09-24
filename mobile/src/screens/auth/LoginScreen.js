@@ -114,7 +114,7 @@ export const LoginScreen = ({ navigation, route }) => {
         if (errorData?.errors) {
           setErrors(errorData.errors);
         } else {
-          showError(getErrorMessage(err), 'Login Failed');
+          setErrors({ general: getErrorMessage(err) || 'Invalid email or password.' });
         }
       }
     });

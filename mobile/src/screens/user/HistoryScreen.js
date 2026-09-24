@@ -147,7 +147,24 @@ export const HistoryScreen = ({ navigation }) => {
         </View>
       ) : (
         <FlatList
-          data={appointments}
+          data={activeTab === 'upcoming' ? appointments.filter(app => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (app.date !== todayStr) return true;
+            
+            // For today's appointments, check session expiry
+            const { isSessionExpired } = require('../../utils/dateTimeHelper');
+            return !isSessionExpired(app.date, app.schedule?.endTime || '11:59 PM');
+          }) : activeTab === 'completed' ? appointments.filter(app => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (app.status === 'completed') return true;
+            
+            // Include today's expired appointments in completed
+            if (app.date === todayStr) {
+               const { isSessionExpired } = require('../../utils/dateTimeHelper');
+               return isSessionExpired(app.date, app.schedule?.endTime || '11:59 PM');
+            }
+            return true;
+          }) : appointments}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
