@@ -57,6 +57,26 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date() });
 });
 
+// Favicon handler (prevent unnecessary 404 error logs, serve logo if available)
+const path = require('path');
+app.get('/favicon.ico', (req, res) => {
+  const iconPath = path.resolve(__dirname, '../../mobile/src/assets/branding/doctorcare-icon.jpg');
+  res.sendFile(iconPath, (err) => {
+    if (err) {
+      // If deployed backend doesn't have the mobile folder, silently return 204
+      res.status(204).end();
+    }
+  });
+});
+
+// Public Root Endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "DoctorCare API is running"
+  });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
