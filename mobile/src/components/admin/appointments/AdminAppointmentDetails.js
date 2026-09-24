@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { COLORS, RADIUS } from '../../../constants/theme';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { parseConsultationDateTime } from '../../../utils/dateTimeHelper';
 
 export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onUpdateStatus, onClose }) => {
   const [localError, setLocalError] = React.useState(null);
@@ -11,6 +12,29 @@ export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onUpdate
   }, [appointment?._id]);
 
   if (!appointment) return null;
+
+  let callTokenVisible = false;
+  if (appointment.status === 'confirmed') {
+    const schedule = appointment.schedule;
+    let sessionStartTimeStr = schedule?.startTime;
+    
+    if (appointment.sessionId && schedule?.sessions?.length > 0) {
+      const session = schedule.sessions.find(s => s._id.toString() === appointment.sessionId.toString());
+      if (session && session.startTime) {
+        sessionStartTimeStr = session.startTime;
+      }
+    }
+
+    if (appointment.date && sessionStartTimeStr) {
+      const consultationStart = parseConsultationDateTime(appointment.date, sessionStartTimeStr);
+      if (consultationStart) {
+        const callTokenAvailableTime = new Date(consultationStart.getTime() - 60 * 60 * 1000);
+        if (new Date() >= callTokenAvailableTime) {
+          callTokenVisible = true;
+        }
+      }
+    }
+  }
 
   const handleUpdate = async (status) => {
     setLocalError(null);
@@ -59,7 +83,7 @@ export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onUpdate
           <Text style={styles.closeText}>Close</Text>
         </TouchableOpacity>
         
-        {appointment.status === 'confirmed' && (
+        {callTokenVisible && (
           <TouchableOpacity style={styles.callBtn} onPress={() => handleUpdate('in_progress')}>
             <Text style={styles.callText}>Call Token</Text>
           </TouchableOpacity>

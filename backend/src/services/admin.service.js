@@ -155,6 +155,7 @@ class AdminService {
         .populate('user', 'email')
         .populate('doctor', 'name specialization')
         .populate('hospital', 'name city facilityType')
+        .populate('schedule', 'startTime endTime sessions')
         .sort({ date: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
