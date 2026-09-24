@@ -5,12 +5,8 @@ const getApiBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
-  // Android Emulator uses 10.0.2.2 to access host machine's localhost
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000/api';
-  }
-  // Web or iOS Simulator defaults to localhost
-  return 'http://localhost:5000/api';
+  // Production Render Backend API URL
+  return 'https://doctor-booking-api-2za8.onrender.com/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

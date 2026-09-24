@@ -10,8 +10,12 @@ const startServer = async () => {
   const HOST = '0.0.0.0';
   const server = app.listen(env.PORT, HOST, () => {
     console.log(`[Server] Running in ${env.NODE_ENV} mode on http://${HOST}:${env.PORT}`);
-    console.log(`[Server] Local API: http://localhost:${env.PORT}/api`);
-    console.log(`[Server] Android Emulator API: http://10.0.2.2:${env.PORT}/api`);
+    if (process.env.PUBLIC_API_URL) {
+      console.log(`[Server] Public API: ${process.env.PUBLIC_API_URL}/api`);
+    } else {
+      console.log(`[Server] Local API: http://localhost:${env.PORT}/api`);
+      console.log(`[Server] Android Emulator API: http://10.0.2.2:${env.PORT}/api`);
+    }
   });
 
   // Graceful shutdown handling
