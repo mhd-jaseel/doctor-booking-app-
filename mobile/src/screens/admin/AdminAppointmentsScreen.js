@@ -21,6 +21,7 @@ export const AdminAppointmentsScreen = ({ navigation }) => {
     pagination,
     loading,
     cancelAppointment,
+    updateAppointmentStatus,
   } = useAdminAppointments(10);
 
   const { showSuccess, showError, showConfirm } = useAppAlert();
@@ -51,6 +52,16 @@ export const AdminAppointmentsScreen = ({ navigation }) => {
     });
   };
 
+  const handleUpdateStatus = async (id, status) => {
+    try {
+      await updateAppointmentStatus(id, status);
+      showSuccess(`Appointment marked as ${status.replace('_', ' ')}.`, 'Status Updated');
+      setModalVisible(false);
+    } catch (e) {
+      showError(e, 'Update Error');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <AdminHeader title="Manage Bookings" showBack onBack={() => navigation.goBack()} />
@@ -68,14 +79,14 @@ export const AdminAppointmentsScreen = ({ navigation }) => {
         />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillScroll}>
-          {['ALL', 'confirmed', 'completed', 'cancelled'].map((st) => (
+          {['ALL', 'confirmed', 'in_progress', 'completed', 'cancelled'].map((st) => (
             <TouchableOpacity
               key={st}
               style={[styles.pill, statusFilter === st && styles.pillActive]}
               onPress={() => setStatusFilter(st)}
             >
               <Text style={[styles.pillText, statusFilter === st && styles.pillTextActive]}>
-                {st.toUpperCase()}
+                {st.toUpperCase().replace('_', ' ')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -102,6 +113,7 @@ export const AdminAppointmentsScreen = ({ navigation }) => {
         <AdminAppointmentDetails
           appointment={selectedApp}
           onCancelBooking={handleCancelBooking}
+          onUpdateStatus={handleUpdateStatus}
           onClose={() => setModalVisible(false)}
         />
       </AdminFormModal>

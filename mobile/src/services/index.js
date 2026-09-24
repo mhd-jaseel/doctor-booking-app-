@@ -109,6 +109,7 @@ export const adminService = {
   getAllAppointments: (params) => api.get('/admin/appointments', { params }),
   getAppointmentById: (id) => api.get(`/admin/appointments/${id}`),
   cancelAppointment: (id) => api.patch(`/admin/appointments/${id}/cancel`),
+  updateAppointmentStatus: (id, status) => api.patch(`/admin/appointments/${id}/status`, { status }),
 
   // Users
   getAllUsers: (params) => api.get('/admin/users', { params }),

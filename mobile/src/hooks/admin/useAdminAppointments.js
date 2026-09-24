@@ -74,6 +74,14 @@ export const useAdminAppointments = (initialLimit = 10) => {
     await fetchAppointments(page, search, statusFilter);
   };
 
+  const updateAppointmentStatus = async (id, status) => {
+    await adminService.updateAppointmentStatus(id, status);
+    appCache.invalidatePrefix('admin:appointments');
+    appCache.invalidatePrefix('admin:schedules');
+    appCache.invalidatePrefix('appointments:');
+    await fetchAppointments(page, search, statusFilter);
+  };
+
   return {
     appointments,
     page,
@@ -87,5 +95,6 @@ export const useAdminAppointments = (initialLimit = 10) => {
     error,
     refresh: () => fetchAppointments(1, search, statusFilter),
     cancelAppointment,
+    updateAppointmentStatus,
   };
 };

@@ -17,6 +17,7 @@ const FACILITY_TYPES = {
 
 const APPOINTMENT_STATUS = {
   CONFIRMED: 'confirmed',
+  IN_PROGRESS: 'in_progress',
   CANCELLED: 'cancelled',
   COMPLETED: 'completed',
 };

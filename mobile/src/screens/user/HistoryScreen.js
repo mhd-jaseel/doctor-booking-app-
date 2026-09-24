@@ -33,7 +33,7 @@ export const HistoryScreen = ({ navigation }) => {
 
   const statusParam = useMemo(() => {
     return activeTab === 'upcoming'
-      ? 'confirmed'
+      ? 'confirmed,in_progress'
       : activeTab === 'completed'
       ? 'completed'
       : 'cancelled';
@@ -158,6 +158,7 @@ export const HistoryScreen = ({ navigation }) => {
           ListFooterComponent={<ListFooterLoader loading={loadingMore} hasMore={pagination?.hasNextPage} />}
           renderItem={({ item }) => {
             const isConfirmed = item.status === 'confirmed';
+            const isInProgress = item.status === 'in_progress';
             const isCompleted = item.status === 'completed';
             const isCancelled = item.status === 'cancelled';
 
@@ -201,6 +202,13 @@ export const HistoryScreen = ({ navigation }) => {
                     >
                       <Text style={styles.cancelBtnText}>Cancel Booking</Text>
                     </TouchableOpacity>
+                  )}
+
+                  {isInProgress && (
+                    <View style={styles.inProgressBadge}>
+                      <Ionicons name="time-outline" size={14} color="#F59E0B" />
+                      <Text style={styles.inProgressBadgeText}>In Progress</Text>
+                    </View>
                   )}
 
                   {isCompleted && (
@@ -478,6 +486,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: COLORS.notAvailable,
+  },
+  inProgressBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.md,
+  },
+  inProgressBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#D97706',
   },
   emptyTitle: {
     fontSize: 16,

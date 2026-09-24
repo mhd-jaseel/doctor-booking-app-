@@ -83,6 +83,9 @@ const appointmentSchema = new mongoose.Schema(
       enum: Object.values(APPOINTMENT_STATUS),
       default: APPOINTMENT_STATUS.CONFIRMED,
     },
+    completedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -94,7 +97,11 @@ appointmentSchema.index(
   { schedule: 1, sessionId: 1, tokenNumber: 1 },
   {
     unique: true,
-    partialFilterExpression: { status: APPOINTMENT_STATUS.CONFIRMED },
+    partialFilterExpression: { 
+      status: { 
+        $in: [APPOINTMENT_STATUS.CONFIRMED, APPOINTMENT_STATUS.IN_PROGRESS, APPOINTMENT_STATUS.COMPLETED] 
+      } 
+    },
   }
 );
 

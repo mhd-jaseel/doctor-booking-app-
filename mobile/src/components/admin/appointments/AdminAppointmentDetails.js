@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { COLORS, RADIUS } from '../../../constants/theme';
 
-export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onClose }) => {
+export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onUpdateStatus, onClose }) => {
   if (!appointment) return null;
 
   return (
@@ -28,7 +28,7 @@ export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onClose 
           <Text style={styles.row}>Date: {appointment.date}</Text>
           <Text style={styles.row}>Assigned Token: #{appointment.tokenNumber}</Text>
           <Text style={styles.row}>Consultation Fee: ₹{appointment.consultationFee} (Snapshot)</Text>
-          <Text style={styles.row}>Status: {appointment.status?.toUpperCase()}</Text>
+          <Text style={styles.row}>Status: {appointment.status?.toUpperCase().replace('_', ' ')}</Text>
         </View>
       </ScrollView>
 
@@ -36,9 +36,22 @@ export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onClose 
         <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
           <Text style={styles.closeText}>Close</Text>
         </TouchableOpacity>
+        
+        {appointment.status === 'confirmed' && (
+          <TouchableOpacity style={styles.callBtn} onPress={() => onUpdateStatus(appointment._id, 'in_progress')}>
+            <Text style={styles.callText}>Call Token</Text>
+          </TouchableOpacity>
+        )}
+        
+        {appointment.status === 'in_progress' && (
+          <TouchableOpacity style={styles.completeBtn} onPress={() => onUpdateStatus(appointment._id, 'completed')}>
+            <Text style={styles.completeText}>Mark Completed</Text>
+          </TouchableOpacity>
+        )}
+
         {appointment.status === 'confirmed' && (
           <TouchableOpacity style={styles.cancelBtn} onPress={() => onCancelBooking(appointment._id)}>
-            <Text style={styles.cancelText}>Cancel Booking</Text>
+            <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -56,4 +69,8 @@ const styles = StyleSheet.create({
   closeText: { fontSize: 13, fontWeight: '700', color: COLORS.textSecondary },
   cancelBtn: { backgroundColor: '#DC2626', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md },
   cancelText: { fontSize: 13, fontWeight: '800', color: COLORS.white },
+  callBtn: { backgroundColor: '#F59E0B', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md },
+  callText: { fontSize: 13, fontWeight: '800', color: COLORS.white },
+  completeBtn: { backgroundColor: '#10B981', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md },
+  completeText: { fontSize: 13, fontWeight: '800', color: COLORS.white },
 });

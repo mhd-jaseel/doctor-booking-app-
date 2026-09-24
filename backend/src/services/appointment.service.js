@@ -154,7 +154,11 @@ class AppointmentService {
   async getMyAppointments(userId, query = {}) {
     const filter = { user: userId };
     if (query.status) {
-      filter.status = query.status;
+      if (query.status.includes(',')) {
+        filter.status = { $in: query.status.split(',') };
+      } else {
+        filter.status = query.status;
+      }
     }
 
     const { page, limit, skip } = getPagination(query.page, query.limit, 10, 50);

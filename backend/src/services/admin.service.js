@@ -181,6 +181,35 @@ class AdminService {
     return appointment;
   }
 
+  async updateAppointmentStatus(appointmentId, status) {
+    const validStatuses = [APPOINTMENT_STATUS.IN_PROGRESS, APPOINTMENT_STATUS.COMPLETED];
+    if (!validStatuses.includes(status)) {
+      throw new AppError('Invalid status update.', 400);
+    }
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      throw new AppError('Appointment not found.', 404);
+    }
+
+    if (appointment.status === APPOINTMENT_STATUS.CANCELLED) {
+      throw new AppError('Cannot update a cancelled appointment.', 400);
+    }
+    
+    // Prevent marking completed if it's already completed
+    if (appointment.status === APPOINTMENT_STATUS.COMPLETED) {
+      throw new AppError('Appointment is already completed.', 400);
+    }
+
+    appointment.status = status;
+    if (status === APPOINTMENT_STATUS.COMPLETED) {
+      appointment.completedAt = new Date();
+    }
+
+    await appointment.save();
+    return appointment;
+  }
+
   async getAllSchedules(query = {}) {
     const filter = {};
     if (query.doctorId) filter.doctor = query.doctorId;

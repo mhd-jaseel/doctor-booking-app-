@@ -8,11 +8,12 @@ export const AppointmentStatusBadge = ({ status }) => {
       style={[
         styles.badge,
         status === 'confirmed' && styles.confirmed,
+        status === 'in_progress' && styles.in_progress,
         status === 'completed' && styles.completed,
         status === 'cancelled' && styles.cancelled,
       ]}
     >
-      <Text style={styles.text}>{status?.toUpperCase()}</Text>
+      <Text style={styles.text}>{status?.toUpperCase().replace('_', ' ')}</Text>
     </View>
   );
 };
@@ -20,6 +21,7 @@ export const AppointmentStatusBadge = ({ status }) => {
 const styles = StyleSheet.create({
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.full },
   confirmed: { backgroundColor: '#EFF6FF' },
+  in_progress: { backgroundColor: '#FEF3C7' },
   completed: { backgroundColor: '#ECFDF5' },
   cancelled: { backgroundColor: '#FEF2F2' },
   text: { fontSize: 10, fontWeight: '800', color: COLORS.primary },

@@ -39,6 +39,11 @@ const cancelAppointment = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, 'Appointment cancelled successfully by admin', result);
 });
 
+const updateAppointmentStatus = asyncHandler(async (req, res) => {
+  const appointment = await adminService.updateAppointmentStatus(req.params.id, req.body.status);
+  return sendSuccess(res, 200, 'Appointment status updated successfully', { appointment });
+});
+
 const getSchedules = asyncHandler(async (req, res) => {
   const result = await adminService.getAllSchedules(req.query);
   return sendSuccess(res, 200, 'Schedules fetched successfully', { schedules: result.schedules }, result.pagination);
@@ -76,6 +81,7 @@ module.exports = {
   getAppointments,
   getAppointmentById,
   cancelAppointment,
+  updateAppointmentStatus,
   getSchedules,
   getScheduleWaitingList,
   assignDoctorFacility,

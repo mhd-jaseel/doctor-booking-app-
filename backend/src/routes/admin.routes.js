@@ -54,6 +54,7 @@ router.get('/schedules/:scheduleId/waiting-list', validateObjectId('scheduleId')
 router.get('/appointments', adminController.getAppointments);
 router.get('/appointments/:id', validateObjectId('id'), adminController.getAppointmentById);
 router.patch('/appointments/:id/cancel', validateObjectId('id'), adminController.cancelAppointment);
+router.patch('/appointments/:id/status', validateObjectId('id'), adminController.updateAppointmentStatus);
 
 // User Management
 router.get('/users', adminController.getUsers);
