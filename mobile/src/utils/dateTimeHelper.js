@@ -100,3 +100,22 @@ export const getSessionStatus = (dateString, startTimeString, endTimeString, now
   }
   return 'UPCOMING';
 };
+
+/**
+ * Normalizes a time string to strictly match "hh:mm AM/PM" format.
+ * Fixes missing spaces (e.g., "08:00PM" -> "08:00 PM") and pads hours.
+ */
+export const normalizeTimeFormat = (timeStr) => {
+  if (!timeStr) return '';
+  const str = String(timeStr).trim().toUpperCase();
+  
+  // Extract digits and modifier
+  const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
+  if (!match) return timeStr; // Return original if totally invalid
+  
+  const hourPart = match[1].padStart(2, '0');
+  const minutePart = match[2];
+  const modifier = match[3] || 'AM'; // Default to AM if missing
+  
+  return `${hourPart}:${minutePart} ${modifier}`;
+};

@@ -16,7 +16,7 @@ import { useAppAlert } from '../../components/common/AppAlert';
 import { useSubmit } from '../../hooks/useSubmit';
 import { getErrorMessage } from '../../utils/errorHandler';
 
-import { getTomorrowDate } from '../../utils/dateTimeHelper';
+import { getTomorrowDate, normalizeTimeFormat } from '../../utils/dateTimeHelper';
 
 export const AdminSchedulesScreen = ({ navigation }) => {
   const {
@@ -138,6 +138,8 @@ export const AdminSchedulesScreen = ({ navigation }) => {
 
     const formattedSessions = (form.sessions || []).map((s) => ({
       ...s,
+      startTime: normalizeTimeFormat(s.startTime),
+      endTime: normalizeTimeFormat(s.endTime),
       totalTokens: Number(s.totalTokens) || 10,
       consultationFee: Number(s.consultationFee) || 350,
     }));

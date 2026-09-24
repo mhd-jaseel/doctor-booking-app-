@@ -66,11 +66,15 @@ const parseConsultationStartTime = (dateString, startTimeString) => {
   if (!dateString || !startTimeString) return null;
 
   const [year, month, day] = dateString.split('-').map(Number);
-  const parts = startTimeString.trim().split(' ');
-  const timePart = parts[0];
-  const modifier = (parts[1] || 'AM').toUpperCase();
+  
+  const str = String(startTimeString).trim().toUpperCase();
+  const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
+  if (!match) return null;
 
-  let [hours, minutes] = timePart.split(':').map(Number);
+  let hours = Number(match[1]);
+  let minutes = Number(match[2]);
+  const modifier = match[3] || 'AM';
+
   if (modifier === 'PM' && hours < 12) hours += 12;
   if (modifier === 'AM' && hours === 12) hours = 0;
 
@@ -100,11 +104,15 @@ const isCancellationAllowed = (dateString, startTimeString, now = new Date()) =>
  */
 const timeToMinutes = (timeStr) => {
   if (!timeStr) return -1;
-  const parts = timeStr.trim().split(' ');
-  const timePart = parts[0];
-  const modifier = (parts[1] || 'AM').toUpperCase();
+  const str = String(timeStr).trim().toUpperCase();
+  const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
+  
+  if (!match) return -1;
 
-  let [hours, minutes] = timePart.split(':').map(Number);
+  let hours = Number(match[1]);
+  let minutes = Number(match[2]);
+  const modifier = match[3] || 'AM';
+
   if (isNaN(hours) || isNaN(minutes)) return -1;
   if (modifier === 'PM' && hours < 12) hours += 12;
   if (modifier === 'AM' && hours === 12) hours = 0;
@@ -133,11 +141,15 @@ const parseConsultationDateTime = (dateString, timeString) => {
   if (!dateString || !timeString) return null;
 
   const [year, month, day] = dateString.split('-').map(Number);
-  const parts = timeString.trim().split(' ');
-  const timePart = parts[0];
-  const modifier = (parts[1] || 'AM').toUpperCase();
+  
+  const str = String(timeString).trim().toUpperCase();
+  const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
+  if (!match) return null;
 
-  let [hours, minutes] = timePart.split(':').map(Number);
+  let hours = Number(match[1]);
+  let minutes = Number(match[2]);
+  const modifier = match[3] || 'AM';
+
   if (modifier === 'PM' && hours < 12) hours += 12;
   if (modifier === 'AM' && hours === 12) hours = 0;
 
