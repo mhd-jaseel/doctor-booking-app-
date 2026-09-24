@@ -38,7 +38,11 @@ export default function App() {
       <SafeAreaProvider style={styles.container}>
         <AuthProvider>
           <AlertProvider>
-            <NavigationContainer>
+            <NavigationContainer
+              documentTitle={{
+                formatter: (options, route) => options?.title || APP_NAME,
+              }}
+            >
               <View style={styles.container}>
                 <RootNavigator />
               </View>

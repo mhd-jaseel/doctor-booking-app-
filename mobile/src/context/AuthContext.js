@@ -1,7 +1,10 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authService } from '../services';
+import { authService, healthcareService, doctorService, appointmentService } from '../services';
 import { appCache } from '../utils/cache';
+import * as Font from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
+import { buildHomeServices } from '../constants/healthcareServices';
 
 const AuthContext = createContext();
 
@@ -23,46 +26,101 @@ export const AuthProvider = ({ children }) => {
     const doRestore = async () => {
       try {
         const storedToken = await AsyncStorage.getItem('@auth_token');
+        const storedUser = await AsyncStorage.getItem('@auth_user');
+
         if (!storedToken) {
           setToken(null);
           setUser(null);
-          return;
-        }
-
-        setToken(storedToken);
-
-        // Validate with backend /auth/me to guarantee accurate role, status and valid JWT
-        try {
-          const res = await authService.getMe();
-          const userData = res.data?.user || res.user || res.data;
-
-          if (!userData || userData.isActive === false) {
-            // Inactive or missing user account
-            await AsyncStorage.removeItem('@auth_token');
-            await AsyncStorage.removeItem('@auth_user');
-            appCache.clearAll();
-            setToken(null);
-            setUser(null);
-          } else {
-            setUser(userData);
-            await AsyncStorage.setItem('@auth_user', JSON.stringify(userData));
+        } else {
+          // Restore immediately from cache so the user isn't waiting
+          setToken(storedToken);
+          let currentUserId = null;
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            currentUserId = parsedUser._id;
           }
-        } catch (err) {
-          // If 401/403 or unauthorized, token is expired/invalid -> clear session
-          if (err.status === 401 || err.status === 403) {
-            await AsyncStorage.removeItem('@auth_token');
-            await AsyncStorage.removeItem('@auth_user');
-            appCache.clearAll();
-            setToken(null);
-            setUser(null);
-          } else {
-            // If network error, fallback to cached user so offline/transient glitch does not wipe state
-            const storedUser = await AsyncStorage.getItem('@auth_user');
-            if (storedUser) {
-              setUser(JSON.parse(storedUser));
+
+          // Validate with backend /auth/me in the background
+          authService.getMe().then(async (res) => {
+            const userData = res.data?.user || res.user || res.data;
+            if (!userData || userData.isActive === false) {
+              await AsyncStorage.removeItem('@auth_token');
+              await AsyncStorage.removeItem('@auth_user');
+              appCache.clearAll();
+              setToken(null);
+              setUser(null);
+            } else {
+              setUser(userData);
+              await AsyncStorage.setItem('@auth_user', JSON.stringify(userData));
             }
-          }
+          }).catch(async (err) => {
+            // If 401/403 or unauthorized, token is expired/invalid -> clear session
+            if (err.status === 401 || err.status === 403 || err.response?.status === 401) {
+              await AsyncStorage.removeItem('@auth_token');
+              await AsyncStorage.removeItem('@auth_user');
+              appCache.clearAll();
+              setToken(null);
+              setUser(null);
+            }
+          });
         }
+
+        // --- PRELOAD ESSENTIAL HOME DATA & ASSETS ---
+        try {
+          const promises = [
+            // 1. Preload Ionicons to prevent missing icons
+            Font.loadAsync(Ionicons.font),
+            // 2. Preload Healthcare Services
+            healthcareService.getActiveServices().catch(() => ({ data: { services: [] } })),
+            // 3. Preload Best Doctors
+            doctorService.getDoctors({ limit: 6 }).catch(() => ({ data: { doctors: [] } })),
+          ];
+
+          // 4. Preload Active Appointment if authenticated
+          if (storedToken && storedUser) {
+            promises.push(
+              appointmentService.getMyAppointments({ status: 'confirmed' })
+                .catch(() => ({ data: { appointments: [] } }))
+            );
+          }
+
+          // Wait max 10s for initial data to not block splash forever
+          const results = await Promise.race([
+            Promise.all(promises),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Init timeout')), 10000))
+          ]);
+
+          // Cache Healthcare Services
+          const hcRes = results[1];
+          if (hcRes && hcRes.data) {
+             const list = hcRes.data.services || [];
+             const { homeCards, othersServices } = buildHomeServices(list);
+             appCache.set('healthcare:home_cards', homeCards, 10 * 60 * 1000);
+             appCache.set('healthcare:others_services', othersServices, 10 * 60 * 1000);
+          }
+
+          // Cache Top Doctors
+          const docsRes = results[2];
+          if (docsRes && docsRes.data) {
+             const fetchedDocs = docsRes.data.doctors || [];
+             if (fetchedDocs.length > 0) {
+               appCache.set('home:top_doctors', fetchedDocs);
+             }
+          }
+
+          // Cache Active Appointment
+          const apptsRes = results[3];
+          if (storedToken && storedUser && apptsRes && apptsRes.data) {
+             const activeApps = apptsRes.data.appointments || [];
+             const latestActive = activeApps.length > 0 ? activeApps[0] : null;
+             const currentUserId = JSON.parse(storedUser)._id;
+             appCache.set(`appointments:active:${currentUserId}`, latestActive);
+          }
+        } catch (initErr) {
+          console.log('[Startup] Non-critical initialization error/timeout:', initErr.message);
+        }
+
       } catch (error) {
         console.error('Failed to restore session:', error);
         setToken(null);
@@ -70,23 +128,15 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    // Run session restore with a timeout guard
-    const restoreWithTimeout = Promise.race([
-      doRestore(),
-      new Promise((resolve) => setTimeout(resolve, SESSION_TIMEOUT_MS)),
-    ]);
+    // Run cache restore
+    await doRestore();
 
-    // Run minimum splash delay in parallel with session restoration
-    await Promise.all([
-      restoreWithTimeout,
-      new Promise((resolve) => {
-        const elapsed = Date.now() - splashStart;
-        const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
-        setTimeout(resolve, remaining);
-      }),
-    ]);
-
-    setLoading(false);
+    // Run minimum splash delay
+    const elapsed = Date.now() - splashStart;
+    const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
+    setTimeout(() => {
+      setLoading(false);
+    }, remaining);
   }, []);
 
   useEffect(() => {

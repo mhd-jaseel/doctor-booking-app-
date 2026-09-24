@@ -34,17 +34,17 @@ export const SplashScreen = () => {
           toValue: 1,
           friction: 8,
           tension: 60,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(logoOpacity, {
           toValue: 1,
           duration: 400,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(glowOpacity, {
           toValue: 0.6,
           duration: 600,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]),
 
@@ -53,12 +53,12 @@ export const SplashScreen = () => {
         Animated.timing(textOpacity, {
           toValue: 1,
           duration: 350,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(textTranslateY, {
           toValue: 0,
           duration: 350,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]),
 
@@ -67,12 +67,12 @@ export const SplashScreen = () => {
         Animated.timing(taglineOpacity, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(taglineTranslateY, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]),
     ]).start();
