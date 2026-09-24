@@ -6,7 +6,7 @@ const DoctorSchedule = require('../models/doctorSchedule.model');
 const WaitingList = require('../models/waitingList.model');
 const Rating = require('../models/rating.model');
 const AppError = require('../utils/AppError');
-const { formatDate } = require('../utils/dateHelper');
+const { formatDate, parseConsultationStartTime } = require('../utils/dateHelper');
 const { APPOINTMENT_STATUS } = require('../constants');
 const { getPagination, buildPaginationMetadata } = require('../utils/pagination');
 
@@ -187,13 +187,36 @@ class AdminService {
       throw new AppError('Invalid status update.', 400);
     }
 
-    const appointment = await Appointment.findById(appointmentId);
+    const appointment = await Appointment.findById(appointmentId).populate('schedule');
     if (!appointment) {
       throw new AppError('Appointment not found.', 404);
     }
 
     if (appointment.status === APPOINTMENT_STATUS.CANCELLED) {
       throw new AppError('Cannot update a cancelled appointment.', 400);
+    }
+
+    // Call Token rule: only available from 1 hour before the consultation start time
+    if (status === APPOINTMENT_STATUS.IN_PROGRESS) {
+      const schedule = appointment.schedule;
+      let sessionStartTimeStr = schedule?.startTime;
+      
+      if (appointment.sessionId && schedule?.sessions?.length > 0) {
+        const session = schedule.sessions.find(s => s._id.toString() === appointment.sessionId.toString());
+        if (session && session.startTime) {
+          sessionStartTimeStr = session.startTime;
+        }
+      }
+
+      if (appointment.date && sessionStartTimeStr) {
+        const consultationStart = parseConsultationStartTime(appointment.date, sessionStartTimeStr);
+        if (consultationStart) {
+          const callTokenAvailableTime = new Date(consultationStart.getTime() - 60 * 60 * 1000);
+          if (new Date() < callTokenAvailableTime) {
+            throw new AppError('Call Token is available only 1 hour before the consultation.', 400);
+          }
+        }
+      }
     }
     
     // Prevent marking completed if it's already completed

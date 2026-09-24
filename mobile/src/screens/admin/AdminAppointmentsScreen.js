@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AdminHeader } from '../../components/common/AdminHeader';
 import { COLORS, RADIUS } from '../../constants/theme';
 import { useAdminAppointments } from '../../hooks/admin/useAdminAppointments';
@@ -27,6 +28,29 @@ export const AdminAppointmentsScreen = ({ navigation }) => {
   const { showSuccess, showError, showConfirm } = useAppAlert();
   const [selectedApp, setSelectedApp] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [expandedDoctors, setExpandedDoctors] = useState({});
+
+  const toggleDoctorExpand = (doctorId) => {
+    setExpandedDoctors((prev) => ({
+      ...prev,
+      [doctorId]: !prev[doctorId],
+    }));
+  };
+
+  const groupedAppointments = useMemo(() => {
+    const groups = {};
+    appointments.forEach((app) => {
+      const docId = app.doctor?._id || app.doctor;
+      if (!groups[docId]) {
+        groups[docId] = {
+          doctor: app.doctor,
+          appointments: [],
+        };
+      }
+      groups[docId].appointments.push(app);
+    });
+    return Object.values(groups);
+  }, [appointments]);
 
   const handleOpenDetails = (app) => {
     setSelectedApp(app);
@@ -94,16 +118,48 @@ export const AdminAppointmentsScreen = ({ navigation }) => {
 
         {loading ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
-        ) : appointments.length === 0 ? (
+        ) : groupedAppointments.length === 0 ? (
           <Text style={styles.emptyText}>No appointments found matching filters.</Text>
         ) : (
-          appointments.map((a) => (
-            <AdminAppointmentCard
-              key={a._id}
-              appointment={a}
-              onPress={handleOpenDetails}
-            />
-          ))
+          groupedAppointments.map((group) => {
+            const docId = group.doctor?._id || group.doctor;
+            const isExpanded = expandedDoctors[docId];
+
+            return (
+              <View key={docId} style={styles.doctorGroup}>
+                <TouchableOpacity
+                  style={styles.doctorHeader}
+                  onPress={() => toggleDoctorExpand(docId)}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.doctorName}>
+                      {group.doctor?.name ? `Dr. ${group.doctor.name}` : 'Unknown Doctor'}
+                    </Text>
+                    <Text style={styles.doctorSpec}>{group.doctor?.specialization || 'General'}</Text>
+                    <Text style={styles.bookingCount}>{group.appointments.length} Booking(s)</Text>
+                  </View>
+                  <Ionicons
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={COLORS.textSecondary}
+                  />
+                </TouchableOpacity>
+
+                {isExpanded && (
+                  <View style={styles.doctorAppointments}>
+                    {group.appointments.map((a) => (
+                      <AdminAppointmentCard
+                        key={a._id}
+                        appointment={a}
+                        onPress={handleOpenDetails}
+                      />
+                    ))}
+                  </View>
+                )}
+              </View>
+            );
+          })
         )}
 
         <AdminPagination pagination={pagination} onPageChange={setPage} />
@@ -153,5 +209,30 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     textAlign: 'center',
     marginVertical: 24,
+  },
+  doctorGroup: {
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.lg,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    overflow: 'hidden',
+  },
+  doctorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: COLORS.white,
+  },
+  doctorName: { fontSize: 15, fontWeight: '800', color: COLORS.textPrimary },
+  doctorSpec: { fontSize: 12, fontWeight: '600', color: COLORS.primary, marginTop: 2 },
+  bookingCount: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4 },
+  doctorAppointments: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
+    backgroundColor: '#F8FAFC',
   },
 });
