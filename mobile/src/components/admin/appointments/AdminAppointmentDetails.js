@@ -1,9 +1,25 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { COLORS, RADIUS } from '../../../constants/theme';
+import { getErrorMessage } from '../../../utils/errorHandler';
 
 export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onUpdateStatus, onClose }) => {
+  const [localError, setLocalError] = React.useState(null);
+
+  React.useEffect(() => {
+    setLocalError(null);
+  }, [appointment?._id]);
+
   if (!appointment) return null;
+
+  const handleUpdate = async (status) => {
+    setLocalError(null);
+    try {
+      await onUpdateStatus(appointment._id, status);
+    } catch (err) {
+      setLocalError(getErrorMessage(err));
+    }
+  };
 
   return (
     <View>
@@ -32,19 +48,25 @@ export const AdminAppointmentDetails = ({ appointment, onCancelBooking, onUpdate
         </View>
       </ScrollView>
 
+      {localError ? (
+        <View style={styles.errorAlert}>
+          <Text style={styles.errorAlertText}>⚠ {localError}</Text>
+        </View>
+      ) : null}
+
       <View style={styles.btns}>
         <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
           <Text style={styles.closeText}>Close</Text>
         </TouchableOpacity>
         
         {appointment.status === 'confirmed' && (
-          <TouchableOpacity style={styles.callBtn} onPress={() => onUpdateStatus(appointment._id, 'in_progress')}>
+          <TouchableOpacity style={styles.callBtn} onPress={() => handleUpdate('in_progress')}>
             <Text style={styles.callText}>Call Token</Text>
           </TouchableOpacity>
         )}
         
         {appointment.status === 'in_progress' && (
-          <TouchableOpacity style={styles.completeBtn} onPress={() => onUpdateStatus(appointment._id, 'completed')}>
+          <TouchableOpacity style={styles.completeBtn} onPress={() => handleUpdate('completed')}>
             <Text style={styles.completeText}>Mark Completed</Text>
           </TouchableOpacity>
         )}
@@ -73,4 +95,17 @@ const styles = StyleSheet.create({
   callText: { fontSize: 13, fontWeight: '800', color: COLORS.white },
   completeBtn: { backgroundColor: '#10B981', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md },
   completeText: { fontSize: 13, fontWeight: '800', color: COLORS.white },
+  errorAlert: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#F87171',
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginBottom: 12,
+  },
+  errorAlertText: {
+    color: '#B91C1C',
+    fontSize: 13,
+    fontWeight: '700',
+  },
 });

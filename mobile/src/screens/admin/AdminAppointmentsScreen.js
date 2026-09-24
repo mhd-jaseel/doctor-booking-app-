@@ -82,7 +82,7 @@ export const AdminAppointmentsScreen = ({ navigation }) => {
       showSuccess(`Appointment marked as ${status.replace('_', ' ')}.`, 'Status Updated');
       setModalVisible(false);
     } catch (e) {
-      showError(e, 'Update Error');
+      throw e;
     }
   };
 
