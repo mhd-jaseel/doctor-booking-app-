@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "DoctorCare",
+    "slug": "doctorcare",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./src/assets/branding/doctorcare-icon.jpg",
+    "splash": {
+      "image": "./src/assets/branding/doctorcare-logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0E1A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.doctorcare.app"
+    },
+    "android": {
+      "package": "com.doctorcare.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/branding/doctorcare-icon.jpg",
+        "backgroundColor": "#0A0E1A"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./src/assets/branding/doctorcare-icon.jpg"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
