@@ -16,6 +16,8 @@ const FACILITY_TYPES = [
 ];
 
 export const FacilityForm = ({ form, errors = {}, onChange, onSave, onCancel, saving = false }) => {
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+
   return (
     <ScrollView style={{ maxHeight: 450 }}>
       {/* Facility Image Upload / Preview */}
@@ -24,6 +26,7 @@ export const FacilityForm = ({ form, errors = {}, onChange, onSave, onCancel, sa
         imageUrl={form.image}
         imageFileId={form.imageFileId}
         fallbackType="facility"
+        onUploadStateChange={setIsUploadingImage}
         onChange={({ image, imageFileId }) => onChange({ ...form, image, imageFileId })}
       />
 
@@ -116,8 +119,9 @@ export const FacilityForm = ({ form, errors = {}, onChange, onSave, onCancel, sa
         />
         <AppButton
           title="Save Facility"
-          loadingTitle="Saving..."
-          loading={saving}
+          loadingTitle={isUploadingImage ? "Uploading..." : "Saving..."}
+          loading={saving || isUploadingImage}
+          disabled={saving || isUploadingImage}
           onPress={onSave}
           size="sm"
         />

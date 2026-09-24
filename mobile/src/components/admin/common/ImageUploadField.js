@@ -18,9 +18,26 @@ export const ImageUploadField = ({
   fallbackType = 'doctor',
   gender = 'male',
   onChange,
+  onUploadStateChange,
 }) => {
   const [uploading, setUploading] = useState(false);
   const { showSuccess, showError, showWarning, showConfirm } = useAppAlert();
+  
+  // Use refs to avoid stale closures when async upload finishes
+  const onChangeRef = React.useRef(onChange);
+  const onUploadStateChangeRef = React.useRef(onUploadStateChange);
+  
+  React.useEffect(() => {
+    onChangeRef.current = onChange;
+    onUploadStateChangeRef.current = onUploadStateChange;
+  }, [onChange, onUploadStateChange]);
+
+  const setUploadingState = (state) => {
+    setUploading(state);
+    if (onUploadStateChangeRef.current) {
+      onUploadStateChangeRef.current(state);
+    }
+  };
 
   const handlePickImage = async () => {
     if (uploading) return;
@@ -68,7 +85,7 @@ export const ImageUploadField = ({
   };
 
   const uploadToGridFS = async (asset, filename, ext) => {
-    setUploading(true);
+    setUploadingState(true);
     try {
       const formData = new FormData();
       const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
@@ -89,10 +106,12 @@ export const ImageUploadField = ({
       const data = uploadRes?.data || uploadRes;
 
       if (data && (data.imageUrl || data.fileId)) {
-        onChange({
-          image: data.imageUrl,
-          imageFileId: data.fileId,
-        });
+        if (onChangeRef.current) {
+          onChangeRef.current({
+            image: data.imageUrl,
+            imageFileId: data.fileId,
+          });
+        }
         showSuccess('Image uploaded and stored securely in MongoDB GridFS.', 'Image Uploaded');
       } else {
         throw new Error('Upload response did not contain file reference.');
@@ -101,7 +120,7 @@ export const ImageUploadField = ({
       console.error('GridFS Upload Error:', error);
       showError('Unable to upload the doctor image. Please try again.', 'Image Upload Failed');
     } finally {
-      setUploading(false);
+      setUploadingState(false);
     }
   };
 

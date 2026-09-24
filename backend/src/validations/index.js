@@ -76,7 +76,7 @@ const validateDoctor = (req, res, next) => {
 };
 
 const validateSchedule = (req, res, next) => {
-  const { doctor, location, date, totalTokens, startTime, endTime } = req.body;
+  const { doctor, location, date, totalTokens, startTime, endTime, sessions } = req.body;
   const errors = {};
 
   if (!doctor) errors.doctor = 'Doctor ID is required.';
@@ -84,11 +84,23 @@ const validateSchedule = (req, res, next) => {
   if (!date || !isDateWithinScheduleWindow(date)) {
     errors.date = 'Schedule date must be between tomorrow and 2 months from today.';
   }
-  if (!totalTokens || isNaN(totalTokens) || Number(totalTokens) < 1 || Number(totalTokens) > 100) {
-    errors.totalTokens = 'Total tokens must be between 1 and 100.';
+
+  if (sessions && Array.isArray(sessions) && sessions.length > 0) {
+    // Validate each session
+    sessions.forEach((s, idx) => {
+      if (!s.startTime || !s.startTime.trim()) errors[`sessions[${idx}].startTime`] = 'Start time is required.';
+      if (!s.endTime || !s.endTime.trim()) errors[`sessions[${idx}].endTime`] = 'End time is required.';
+      if (!s.totalTokens || isNaN(s.totalTokens) || Number(s.totalTokens) < 1) {
+        errors[`sessions[${idx}].totalTokens`] = 'Valid total tokens is required.';
+      }
+    });
+  } else {
+    if (!totalTokens || isNaN(totalTokens) || Number(totalTokens) < 1 || Number(totalTokens) > 100) {
+      errors.totalTokens = 'Total tokens must be between 1 and 100.';
+    }
+    if (!startTime || !startTime.trim()) errors.startTime = 'Start time is required (e.g., 09:00 AM).';
+    if (!endTime || !endTime.trim()) errors.endTime = 'End time is required (e.g., 01:00 PM).';
   }
-  if (!startTime || !startTime.trim()) errors.startTime = 'Start time is required (e.g., 09:00 AM).';
-  if (!endTime || !endTime.trim()) errors.endTime = 'End time is required (e.g., 01:00 PM).';
 
   if (Object.keys(errors).length > 0) {
     return next(new AppError('Schedule validation failed', 422, errors));

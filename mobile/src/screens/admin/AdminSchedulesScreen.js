@@ -146,6 +146,9 @@ export const AdminSchedulesScreen = ({ navigation }) => {
       doctor: form.doctor,
       location: form.location,
       date: form.date,
+      totalTokens: formattedSessions.reduce((acc, s) => acc + (Number(s.totalTokens) || 0), 0),
+      startTime: formattedSessions.length > 0 ? formattedSessions[0].startTime : '10:00 AM',
+      endTime: formattedSessions.length > 0 ? formattedSessions[formattedSessions.length - 1].endTime : '01:00 PM',
       sessions: formattedSessions,
     };
 

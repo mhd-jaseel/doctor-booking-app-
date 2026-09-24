@@ -6,7 +6,7 @@ import { FormFieldError } from '../../common/FormFieldError';
 import { COLORS, RADIUS } from '../../../constants/theme';
 
 export const DoctorForm = ({ form, errors = {}, onChange, onSave, onCancel, saving = false }) => {
-
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
 
   return (
     <ScrollView style={{ maxHeight: 450 }}>
@@ -17,6 +17,7 @@ export const DoctorForm = ({ form, errors = {}, onChange, onSave, onCancel, savi
         imageFileId={form.imageFileId}
         fallbackType="doctor"
         gender={form.gender || 'male'}
+        onUploadStateChange={setIsUploadingImage}
         onChange={({ image, imageFileId }) => onChange({ ...form, image, imageFileId })}
       />
 
@@ -115,8 +116,9 @@ export const DoctorForm = ({ form, errors = {}, onChange, onSave, onCancel, savi
         />
         <AppButton
           title="Save Doctor"
-          loadingTitle="Saving..."
-          loading={saving}
+          loadingTitle={isUploadingImage ? "Uploading..." : "Saving..."}
+          loading={saving || isUploadingImage}
+          disabled={saving || isUploadingImage}
           onPress={onSave}
           size="sm"
         />
